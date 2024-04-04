@@ -13,7 +13,6 @@ public class VisitDTO {
 
     private Long id;
 
-    @NotNull
     private VisitStatus status;
 
     private LocalDateTime inTime;
@@ -30,12 +29,12 @@ public class VisitDTO {
     @NotNull
     private Integer noOfPeople;
 
+    @NotNull
     private Long visitor;
 
-    @VisitFlatUnique
-    private Long flat;
+    @NotNull
+    private String flatNumber;
 
-    @VisitUserUnique
-    private Long user;
+    private String userName;
 
 }

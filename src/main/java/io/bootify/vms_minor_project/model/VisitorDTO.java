@@ -2,10 +2,11 @@ package io.bootify.vms_minor_project.model;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-
+@Data
 @Getter
 @Setter
 public class VisitorDTO {
@@ -31,6 +32,6 @@ public class VisitorDTO {
     @VisitorIdNumberUnique
     private String idNumber;
 
-    private Long adress;
+    private AddressDTO address;
 
 }

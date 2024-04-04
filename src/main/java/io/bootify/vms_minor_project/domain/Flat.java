@@ -27,7 +27,7 @@ public class Flat {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column
+    @Column(unique = true)
     private String number;
 
     @OneToMany(mappedBy = "flat")

@@ -3,6 +3,7 @@ package io.bootify.vms_minor_project.service;
 import io.bootify.vms_minor_project.domain.Address;
 import io.bootify.vms_minor_project.domain.Visit;
 import io.bootify.vms_minor_project.domain.Visitor;
+import io.bootify.vms_minor_project.model.AddressDTO;
 import io.bootify.vms_minor_project.model.VisitorDTO;
 import io.bootify.vms_minor_project.repos.AddressRepository;
 import io.bootify.vms_minor_project.repos.VisitRepository;
@@ -10,6 +11,8 @@ import io.bootify.vms_minor_project.repos.VisitorRepository;
 import io.bootify.vms_minor_project.util.NotFoundException;
 import io.bootify.vms_minor_project.util.ReferencedWarning;
 import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +23,9 @@ public class VisitorService {
     private final VisitorRepository visitorRepository;
     private final AddressRepository addressRepository;
     private final VisitRepository visitRepository;
+
+    @Autowired
+    private AddressService addressService;
 
     public VisitorService(final VisitorRepository visitorRepository,
             final AddressRepository addressRepository, final VisitRepository visitRepository) {
@@ -64,7 +70,10 @@ public class VisitorService {
         visitorDTO.setEmail(visitor.getEmail());
         visitorDTO.setPhoneNo(visitor.getPhoneNo());
         visitorDTO.setIdNumber(visitor.getIdNumber());
-        visitorDTO.setAdress(visitor.getAdress() == null ? null : visitor.getAdress().getId());
+        final AddressDTO addressDTO = new AddressDTO();
+        addressService.mapToDTO(visitor.getAdress(),addressDTO);
+        visitorDTO.setAddress(addressDTO);
+//        visitorDTO.setAdress(visitor.getAdress() == null ? null : visitor.getAdress().getId());
         return visitorDTO;
     }
 
@@ -73,9 +82,12 @@ public class VisitorService {
         visitor.setEmail(visitorDTO.getEmail());
         visitor.setPhoneNo(visitorDTO.getPhoneNo());
         visitor.setIdNumber(visitorDTO.getIdNumber());
-        final Address adress = visitorDTO.getAdress() == null ? null : addressRepository.findById(visitorDTO.getAdress())
-                .orElseThrow(() -> new NotFoundException("adress not found"));
-        visitor.setAdress(adress);
+        final Address address = new Address();
+        addressService.mapToEntity(visitorDTO.getAddress(),address);
+        /*final Address adress = visitorDTO.getAdress() == null ? null : addressRepository.findById(visitorDTO.getAdress())
+                .orElseThrow(() -> new NotFoundException("adress not found"));*/
+        visitor.setAdress(address);
+        addressRepository.save(address);
         return visitor;
     }
 

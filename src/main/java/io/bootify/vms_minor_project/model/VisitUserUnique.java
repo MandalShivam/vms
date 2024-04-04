@@ -1,3 +1,4 @@
+/*
 package io.bootify.vms_minor_project.model;
 
 import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
@@ -18,9 +19,11 @@ import java.util.Map;
 import org.springframework.web.servlet.HandlerMapping;
 
 
+*/
 /**
  * Validate that the id value isn't taken yet.
- */
+ *//*
+
 @Target({ FIELD, METHOD, ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -65,3 +68,4 @@ public @interface VisitUserUnique {
     }
 
 }
+*/

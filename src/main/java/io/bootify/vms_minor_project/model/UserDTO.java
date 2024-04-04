@@ -2,10 +2,11 @@ package io.bootify.vms_minor_project.model;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 
-
+@Data
 @Getter
 @Setter
 public class UserDTO {
@@ -33,8 +34,8 @@ public class UserDTO {
     @NotNull
     private UserStatus status;
 
-    private Long flat;
+    private String flatNumber;
 
-    private Long address;
+    private AddressDTO address;
 
 }

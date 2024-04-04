@@ -4,7 +4,9 @@ import io.bootify.vms_minor_project.domain.Address;
 import io.bootify.vms_minor_project.domain.Flat;
 import io.bootify.vms_minor_project.domain.User;
 import io.bootify.vms_minor_project.domain.Visit;
+import io.bootify.vms_minor_project.model.AddressDTO;
 import io.bootify.vms_minor_project.model.UserDTO;
+import io.bootify.vms_minor_project.model.UserStatus;
 import io.bootify.vms_minor_project.repos.AddressRepository;
 import io.bootify.vms_minor_project.repos.FlatRepository;
 import io.bootify.vms_minor_project.repos.UserRepository;
@@ -12,6 +14,9 @@ import io.bootify.vms_minor_project.repos.VisitRepository;
 import io.bootify.vms_minor_project.util.NotFoundException;
 import io.bootify.vms_minor_project.util.ReferencedWarning;
 import java.util.List;
+
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +28,8 @@ public class UserService {
     private final FlatRepository flatRepository;
     private final AddressRepository addressRepository;
     private final VisitRepository visitRepository;
+    @Autowired
+    private AddressService addressService;
 
     public UserService(final UserRepository userRepository, final FlatRepository flatRepository,
             final AddressRepository addressRepository, final VisitRepository visitRepository) {
@@ -45,11 +52,29 @@ public class UserService {
                 .orElseThrow(NotFoundException::new);
     }
 
+    @Transactional
     public Long create(final UserDTO userDTO) {
         final User user = new User();
         mapToEntity(userDTO, user);
         return userRepository.save(user).getId();
     }
+
+    public void markUserInActive(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if(user == null)
+            throw new NotFoundException("User does not exists");
+        user.setStatus(UserStatus.INACTIVE);
+        userRepository.save(user);
+    }
+
+    public void markUserActive(Long userId) {
+        User user = userRepository.findById(userId).orElse(null);
+        if(user == null)
+            throw new NotFoundException("User does not exists");
+        user.setStatus(UserStatus.ACTIVE);
+        userRepository.save(user);
+    }
+
 
     public void update(final Long id, final UserDTO userDTO) {
         final User user = userRepository.findById(id)
@@ -69,8 +94,12 @@ public class UserService {
         userDTO.setPhoneNo(user.getPhoneNo());
         userDTO.setRole(user.getRole());
         userDTO.setStatus(user.getStatus());
-        userDTO.setFlat(user.getFlat() == null ? null : user.getFlat().getId());
-        userDTO.setAddress(user.getAddress() == null ? null : user.getAddress().getId());
+        userDTO.setFlatNumber(user.getFlat().getNumber());
+
+        AddressDTO addressDTO = new AddressDTO();
+        addressService.mapToDTO(user.getAddress(),addressDTO);
+
+        userDTO.setAddress(addressDTO);
         return userDTO;
     }
 
@@ -80,13 +109,20 @@ public class UserService {
         user.setPhoneNo(userDTO.getPhoneNo());
         user.setRole(userDTO.getRole());
         user.setStatus(userDTO.getStatus());
-        final Flat flat = userDTO.getFlat() == null ? null : flatRepository.findById(userDTO.getFlat())
-                .orElseThrow(() -> new NotFoundException("flat not found"));
-        user.setFlat(flat);
-        final Address address = userDTO.getAddress() == null ? null : addressRepository.findById(userDTO.getAddress())
-                .orElseThrow(() -> new NotFoundException("address not found"));
-        user.setAddress(address);
-        return user;
+       Flat flat = flatRepository.findByNumber(userDTO.getFlatNumber());
+       if(flat == null) {
+           flat = new Flat();
+           flat.setNumber(userDTO.getFlatNumber());
+           flatRepository.save(flat);
+       }
+       user.setFlat(flat);
+       Address address = new Address();
+       if(userDTO.getAddress()!=null) {
+           address = addressService.mapToEntity(userDTO.getAddress(),address);
+          // addressRepository.save(address);
+       }
+       user.setAddress(address);
+       return user;
     }
 
     public boolean emailExists(final String email) {

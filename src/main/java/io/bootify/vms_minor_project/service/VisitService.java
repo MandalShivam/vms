@@ -5,12 +5,17 @@ import io.bootify.vms_minor_project.domain.User;
 import io.bootify.vms_minor_project.domain.Visit;
 import io.bootify.vms_minor_project.domain.Visitor;
 import io.bootify.vms_minor_project.model.VisitDTO;
+import io.bootify.vms_minor_project.model.VisitStatus;
 import io.bootify.vms_minor_project.repos.FlatRepository;
 import io.bootify.vms_minor_project.repos.UserRepository;
 import io.bootify.vms_minor_project.repos.VisitRepository;
 import io.bootify.vms_minor_project.repos.VisitorRepository;
 import io.bootify.vms_minor_project.util.NotFoundException;
+
+import java.time.LocalDateTime;
 import java.util.List;
+
+import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -39,23 +44,73 @@ public class VisitService {
                 .toList();
     }
 
+    public List<VisitDTO> getAllWaitingVisits() {
+        final List<Visit> visits = visitRepository.findByStatus(VisitStatus.WAITING);
+        return visits.stream()
+                .map(visit -> mapToDTO(visit, new VisitDTO()))
+                .toList();
+    }
+
     public VisitDTO get(final Long id) {
         return visitRepository.findById(id)
                 .map(visit -> mapToDTO(visit, new VisitDTO()))
                 .orElseThrow(NotFoundException::new);
     }
 
-    public Long create(final VisitDTO visitDTO) {
+    public Long create(final VisitDTO visitDTO) throws BadRequestException {
         final Visit visit = new Visit();
+        visitDTO.setStatus(VisitStatus.WAITING);
         mapToEntity(visitDTO, visit);
         return visitRepository.save(visit).getId();
     }
 
-    public void update(final Long id, final VisitDTO visitDTO) {
+    public void update(final Long id, final VisitDTO visitDTO) throws BadRequestException {
         final Visit visit = visitRepository.findById(id)
                 .orElseThrow(NotFoundException::new);
         mapToEntity(visitDTO, visit);
         visitRepository.save(visit);
+    }
+
+    public void updateInTime(Long visitId) {
+        Visit visit = visitRepository.findById(visitId).orElse(null);
+        if(visit == null)
+            throw new NotFoundException();
+        if(visit.getStatus().equals(VisitStatus.APPROVED)) {
+            visit.setInTime(LocalDateTime.now());
+            visit.setStatus(VisitStatus.INPROGRESS);
+            visitRepository.save(visit);
+        }
+    }
+
+    public void approve(Long visitId) {
+        Visit visit = visitRepository.findById(visitId).orElse(null);
+        if(visit == null)
+            throw new NotFoundException();
+        if(visit.getStatus().equals(VisitStatus.WAITING)) {
+            visit.setStatus(VisitStatus.APPROVED);
+            visitRepository.save(visit);
+        }
+    }
+
+    public void reject(Long visitId) {
+        Visit visit = visitRepository.findById(visitId).orElse(null);
+        if(visit == null)
+            throw new NotFoundException();
+        if(visit.getStatus().equals(VisitStatus.WAITING)) {
+            visit.setStatus(VisitStatus.REJECTED);
+            visitRepository.save(visit);
+        }
+    }
+
+    public void updateOutTime(Long visitId) {
+        Visit visit = visitRepository.findById(visitId).orElse(null);
+        if(visit == null)
+            throw new NotFoundException();
+        if(visit.getStatus().equals(VisitStatus.INPROGRESS))
+            visit.setOutTime(LocalDateTime.now());
+        visit.setStatus(VisitStatus.COMPLETED);
+        visitRepository.save(visit);
+
     }
 
     public void delete(final Long id) {
@@ -71,12 +126,12 @@ public class VisitService {
         visitDTO.setPurpose(visit.getPurpose());
         visitDTO.setNoOfPeople(visit.getNoOfPeople());
         visitDTO.setVisitor(visit.getVisitor() == null ? null : visit.getVisitor().getId());
-        visitDTO.setFlat(visit.getFlat() == null ? null : visit.getFlat().getId());
-        visitDTO.setUser(visit.getUser() == null ? null : visit.getUser().getId());
+        ///-----
+        visitDTO.setFlatNumber(visit.getFlat().getNumber());
         return visitDTO;
     }
 
-    private Visit mapToEntity(final VisitDTO visitDTO, final Visit visit) {
+    private Visit mapToEntity(final VisitDTO visitDTO, final Visit visit) throws BadRequestException {
         visit.setStatus(visitDTO.getStatus());
         visit.setInTime(visitDTO.getInTime());
         visit.setOutTime(visitDTO.getOutTime());
@@ -86,12 +141,11 @@ public class VisitService {
         final Visitor visitor = visitDTO.getVisitor() == null ? null : visitorRepository.findById(visitDTO.getVisitor())
                 .orElseThrow(() -> new NotFoundException("visitor not found"));
         visit.setVisitor(visitor);
-        final Flat flat = visitDTO.getFlat() == null ? null : flatRepository.findById(visitDTO.getFlat())
-                .orElseThrow(() -> new NotFoundException("flat not found"));
+        final Flat flat = flatRepository.findByNumber(visitDTO.getFlatNumber());
+        if(flat == null) {
+            throw new BadRequestException("Invalid flat number");
+        }
         visit.setFlat(flat);
-        final User user = visitDTO.getUser() == null ? null : userRepository.findById(visitDTO.getUser())
-                .orElseThrow(() -> new NotFoundException("user not found"));
-        visit.setUser(user);
         return visit;
     }
 

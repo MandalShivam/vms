@@ -58,7 +58,7 @@ public class AddressService {
         addressRepository.deleteById(id);
     }
 
-    private AddressDTO mapToDTO(final Address address, final AddressDTO addressDTO) {
+    public AddressDTO mapToDTO(final Address address, final AddressDTO addressDTO) {
         addressDTO.setId(address.getId());
         addressDTO.setLine1(address.getLine1());
         addressDTO.setLin2(address.getLin2());
@@ -68,7 +68,7 @@ public class AddressService {
         return addressDTO;
     }
 
-    private Address mapToEntity(final AddressDTO addressDTO, final Address address) {
+    public Address mapToEntity(final AddressDTO addressDTO, final Address address) {
         address.setLine1(addressDTO.getLine1());
         address.setLin2(addressDTO.getLin2());
         address.setPincode(addressDTO.getPincode());
