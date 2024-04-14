@@ -1,7 +1,6 @@
 package io.bootify.vms_minor_project.service;
 
 import io.bootify.vms_minor_project.domain.Flat;
-import io.bootify.vms_minor_project.domain.User;
 import io.bootify.vms_minor_project.domain.Visit;
 import io.bootify.vms_minor_project.domain.Visitor;
 import io.bootify.vms_minor_project.model.VisitDTO;

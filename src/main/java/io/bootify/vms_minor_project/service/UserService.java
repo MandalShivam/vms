@@ -119,7 +119,7 @@ public class UserService {
        Address address = new Address();
        if(userDTO.getAddress()!=null) {
            address = addressService.mapToEntity(userDTO.getAddress(),address);
-          // addressRepository.save(address);
+           addressRepository.save(address);
        }
        user.setAddress(address);
        return user;
