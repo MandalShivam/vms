@@ -59,16 +59,17 @@ public class GateKeeperPanelController {
 
     @PostMapping("/image-upload")
     public ResponseEntity<String> uploadImageForUserCreation(@RequestParam("file") MultipartFile file) {
-        String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        String response = "/content/" +filename;
-        String uploadPath = "/tmp/images/"+filename;
+//String uploadPath  = "D:\\image\\" + UUID.randomUUID() + "_" + file.getOriginalFilename();
+
+        String uploadPath  = "C:\\tmp\\images\\" + UUID.randomUUID() + "_" + file.getOriginalFilename();
+
         try {
             file.transferTo(new File(uploadPath));
 
         } catch (IOException e) {
             return ResponseEntity.ok("Exception while uploading image");
         }
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(uploadPath);
     }
         List<String> response = new ArrayList<String>();
 
